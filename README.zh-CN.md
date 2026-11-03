@@ -84,7 +84,7 @@ end
 
 ### 码表
 
-多码点 Lua 文件返回 `codes`、`prefixes`、`max_chars`。下面是可独立使用的简化
+Lua 文件返回 `codes`、`scope`。下面是可独立使用的简化
 `lua/flash-any/tables/gemoji.lua` 示例：
 
 ```lua
@@ -93,24 +93,17 @@ return {
     ["😀"] = { "grinning", "happy", "smile" },
     ["👩‍💻"] = { "coder", "technologist", "woman" },
   },
-  prefixes = {
-    ["👩"] = true,
-    ["👩‍"] = true,
-  },
-  max_chars = 3,
+  scope = {"😀","👩‍💻"} -- 可选，用于快速初筛。如果提供tsv大码表，健议提供。
 }
 ```
 
 - `codes` 保存文本到非空 ASCII 编码的映射；同一条文本可以有多个编码。
-- `prefixes` 列出所有还能加长的文本真前缀，值为 `true`。即使前缀本身也有编码，
-  仍应列入；叶子键省略。
-- `max_chars` 是最长条目的 Unicode 码点数，与编码长度、显示出的字符数量不同。
-  这里 `👩‍💻` 由三个码点组成。
+- scope 是 tsv 文件中的最大和最小字符串，用于快速初筛。
 
-提供者在文件中准备好前缀集合即可，无需自定义 matcher，也无需在 source 中配置长度。
-只有单码点键的码表可直接返回编码映射。可选的 `tables/gemoji.tsv` 保存完整数据，
+提供者在文件中准备好码表即可，无需自定义 matcher。
+目前的码表只支持单字素条目，多个字素暂不支持。可选的 `tables/gemoji.tsv` 保存完整数据，
 Lua 只放常用子集。TSV 应完整包含 Lua 编码条目，按 UTF-8 字节序排序，行格式为
-`文本<Tab>编码1,编码2`；`max_chars` 应覆盖完整数据。
+`文本<Tab>编码1,编码2`；`scope` 应覆盖完整数据。
 
 ### 生成码表
 
@@ -127,7 +120,7 @@ Lua 只放常用子集。TSV 应完整包含 Lua 编码条目，按 UTF-8 字节
 :FlashAnyBuildTable emoji.tsv lua/flash-any/tables/gemoji.lua
 ```
 
-builder 会合并重复编码，并自动生成前缀集合和最长文本长度。像上面这样省略 TSV
+builder 会合并重复编码，并自动生成 scope 。像上面这样省略 TSV
 输出路径，就只生成 Lua。如需同时生成排序后的完整 TSV：
 
 ```vim

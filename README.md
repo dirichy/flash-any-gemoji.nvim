@@ -89,8 +89,15 @@ may be `full_code`, `initial`, `prefix`, or a custom matcher function.
 
 ### Code table
 
-A multi-codepoint Lua file returns `codes`, `prefixes`, and `max_chars`. This is a
-small standalone example for `lua/flash-any/tables/gemoji.lua`:
+The factory can accept `opts` to read extension-specific configuration options.
+
+The `matcher` field supports `full_code`, `initial`, and `prefix`, or a custom matching function.
+
+### Code Table
+
+The Lua module returns a table containing `codes` and optionally `scope`.
+
+Below is a minimal, self-contained example of `lua/flash-any/tables/gemoji.lua`:
 
 ```lua
 return {
@@ -98,27 +105,26 @@ return {
     ["😀"] = { "grinning", "happy", "smile" },
     ["👩‍💻"] = { "coder", "technologist", "woman" },
   },
-  prefixes = {
-    ["👩"] = true,
-    ["👩‍"] = true,
-  },
-  max_chars = 3,
+  scope = { "😀", "👩‍💻" }, -- Optional, for fast preliminary filtering.
 }
 ```
 
-- `codes` maps text entries to nonempty ASCII encodings. One entry may have several codes.
-- `prefixes` lists every proper text prefix that can be extended, with value `true`.
-  Include a prefix even when it also has its own codes. Omit terminal keys.
-- `max_chars` is the longest text entry in Unicode codepoints, not the encoding
-  length or the number of displayed glyphs. Here `👩‍💻` has three codepoints.
+- `codes` maps text entries to non-empty ASCII codes. Each entry can have multiple codes.
+- `scope` specifies the minimum and maximum strings in the TSV file, allowing fast preliminary filtering.
 
-Keep the prefix set ready in the file; no custom matcher or source length option
-is needed. Tables containing only single-codepoint keys may instead return the
-encoding map directly. An optional `tables/gemoji.tsv` can hold the complete data
-while Lua contains a common subset. TSV must contain every Lua code entry, be
-sorted by UTF-8 bytes, and use `text<Tab>code1,code2`; `max_chars` must cover the full data.
+Providers only need to prepare the code table; no custom matcher is required.
 
-### Generating a table
+Currently, code table entries are limited to a single grapheme cluster. Entries containing multiple grapheme clusters are not yet supported.
+
+An optional `tables/gemoji.tsv` file can store the complete dataset, while the Lua module contains only a commonly used subset.
+
+The TSV must include all entries defined in the Lua code table and be sorted in UTF-8 byte order. Each line has the following format:
+
+`text<Tab>code1,code2`
+
+The `scope` must cover the complete dataset.
+
+### Generating the Code Table
 
 Prepare a TSV with actual tabs between the emoji and its comma-separated codes:
 
